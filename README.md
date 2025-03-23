@@ -8,6 +8,7 @@ A Next.js application that uses Retrieval Augmented Generation (RAG) to answer q
 - 🔍 **Semantic Search**: Finds the most relevant essays using embeddings and vector similarity
 - 🤖 **AI-Powered Summaries**: Generates concise, accurate answers using GPT-4
 - 🔗 **Source Links**: Provides links to the original essays
+- 📊 **Evaluation Framework**: Comprehensive toolkit for benchmarking system performance
 
 ## Technology Stack
 
@@ -80,6 +81,34 @@ pip install -r requirements.txt
 python scrape_essays.py
 python upload_to_supabase.py
 ```
+
+## Evaluation Framework
+
+The project includes a comprehensive evaluation toolkit to benchmark the quality of the RAG system's responses:
+
+### Features
+
+- Predefined set of questions with expert-written "golden" answers
+- Automated evaluation using GPT-4
+- Interactive human evaluation option
+- Detailed metrics including relevance, accuracy, completeness, and citation quality
+- Comprehensive reporting and statistics
+
+### Running Evaluations
+
+```bash
+# Install evaluation dependencies
+cd eval
+npm install
+
+# Run automated evaluation with GPT-4
+npm run eval:auto
+
+# Run interactive human evaluation
+npm run human
+```
+
+See the [evaluation README](./eval/README.md) for more details.
 
 ## Database Setup
 
