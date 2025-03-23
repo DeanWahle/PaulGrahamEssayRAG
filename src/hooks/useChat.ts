@@ -52,7 +52,7 @@ export function useChat() {
       if (essays && essays.length > 0) {
         // Format essay links for display in a list
         const essayLinksFormatted = essays.slice(0, 3).map((essay: Essay) => 
-          `<li><a href="${essay.url}" target="_blank" rel="noopener noreferrer">${essay.title}</a></li>`
+          `<li><a href="${essay.url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">${essay.title}</a></li>`
         ).join('');
 
         // Generate AI summary
@@ -69,12 +69,28 @@ export function useChat() {
         const { summary, references } = await summaryResponse.json();
 
         // Format the complete response with both essay links and summary
+        // Using CSS to ensure proper spacing and formatting
         const formattedResponse = `
-          <h3>Relevant essay links:</h3>
-          <ol>${essayLinksFormatted}</ol>
-          <h3>AI-generated synthesis:</h3>
-          <div class="synthesis">${marked.parse(summary)}</div>
-          ${references ? `<h4>References:</h4>${marked.parse(references)}` : ''}
+          <div class="response-container space-y-4">
+            <div class="essay-links">
+              <h3 class="font-bold mb-2">Relevant essay links:</h3>
+              <ol class="list-decimal ml-6 space-y-1">
+                ${essayLinksFormatted}
+              </ol>
+            </div>
+            
+            <div class="synthesis">
+              <h3 class="font-bold mb-2">AI-generated synthesis:</h3>
+              <div class="whitespace-pre-line">${marked.parse(summary)}</div>
+            </div>
+            
+            ${references ? `
+              <div class="references">
+                <h4 class="font-bold mb-2">References:</h4>
+                <div class="whitespace-pre-line">${marked.parse(references)}</div>
+              </div>
+            ` : ''}
+          </div>
         `;
 
         // Add assistant message to chat

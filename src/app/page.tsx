@@ -25,11 +25,14 @@ export default function Home() {
                   key={i} 
                   className={`p-4 rounded-lg ${
                     message.role === 'user' 
-                      ? 'bg-blue-500/10 ml-auto' 
-                      : 'bg-gray-500/10'
-                  } max-w-[80%] ${message.role === 'user' ? 'ml-auto' : 'mr-auto'}`}
+                      ? 'bg-blue-500/10 ml-auto text-right' 
+                      : 'bg-gray-500/10 text-left'
+                  } ${message.role === 'user' ? 'ml-auto max-w-[80%]' : 'mr-auto w-full'}`}
                 >
-                  <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                  <div 
+                    className={`${message.role === 'assistant' ? 'prose prose-sm max-w-none' : ''}`}
+                    dangerouslySetInnerHTML={{ __html: message.content }} 
+                  />
                 </div>
               ))
             )}
