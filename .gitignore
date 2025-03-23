@@ -58,3 +58,6 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# Evaluation results - often large files
+/eval/results/
