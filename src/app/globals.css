@@ -8,7 +8,8 @@
 }
 
 .synthesis p {
-  margin-bottom: 1em;
+  margin-bottom: 1.25em;
+  line-height: 1.6;
 }
 
 .synthesis a {
@@ -22,10 +23,12 @@
 
 .synthesis strong {
   font-weight: 600;
+  color: #1f2937;
 }
 
 .references p {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.75em;
+  color: #4b5563;
 }
 
 /* Citations styling */
@@ -44,4 +47,27 @@
 
 .essay-links a:hover {
   color: #1d4ed8;
+}
+
+.essay-links li {
+  margin-bottom: 0.5em;
+}
+
+/* Improved message container */
+.prose {
+  max-width: 100%;
+}
+
+.prose p {
+  text-align: left;
+}
+
+/* Main container styling */
+main {
+  background-color: #f9fafb;
+}
+
+/* Response container styling */
+.response-container {
+  max-width: 100%;
 }
