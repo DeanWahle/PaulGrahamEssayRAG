@@ -3,12 +3,28 @@ import readline from 'readline';
 import fs from 'fs';
 import path from 'path';
 
+interface EvalResult {
+  question: string;
+  systemAnswer: string;
+  goldenAnswer: string;
+  keyPoints: string[];
+  retrievedEssays: string[];
+  scores: {
+    relevance: number;
+    accuracy: number;
+    completeness: number;
+    citation: number;
+    overall: number;
+  };
+  comments: string;
+}
+
 /**
  * Evaluator that prompts a human to assess the quality of system responses
  */
 export class HumanEvaluator implements Evaluator {
   private rl: readline.Interface;
-  private results: any[] = [];
+  private results: EvalResult[] = [];
   private resultsFile: string;
 
   constructor() {
@@ -43,7 +59,7 @@ export class HumanEvaluator implements Evaluator {
     });
   }
   
-  private saveResults() {
+  private saveResults(): void {
     fs.writeFileSync(this.resultsFile, JSON.stringify(this.results, null, 2));
     console.log(`Results saved to ${this.resultsFile}`);
   }
@@ -109,10 +125,10 @@ export class HumanEvaluator implements Evaluator {
     });
     
     // Save result
-    const result = {
+    const result: EvalResult = {
       question,
       systemAnswer,
-      goldenAnswer: goldenAnswer,
+      goldenAnswer,
       keyPoints,
       retrievedEssays,
       scores: {
@@ -140,7 +156,7 @@ export class HumanEvaluator implements Evaluator {
     return metrics;
   }
   
-  close() {
+  close(): void {
     this.rl.close();
   }
 } 

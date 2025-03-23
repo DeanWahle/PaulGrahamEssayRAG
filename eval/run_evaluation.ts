@@ -1,240 +1,221 @@
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 import fs from 'fs';
 import path from 'path';
 import { GPT4Evaluator } from './evaluators/gpt4_evaluator';
-import { HumanEvaluator } from './evaluators/human_evaluator';
-import { EvalMetrics } from './evaluators/types';
+import { EvalMetrics, Evaluator, EvalInput } from './evaluators/types';
+import { getEssaysForQuestion } from '../src/utils/essay_retrieval';
+import { askQuestion } from '../src/utils/qa';
 
-// Import fetch for Node.js
-const fetch = require('node-fetch');
+// Type for a question from questions.json
+interface Question {
+  id: number;
+  question: string;
+  tags: string[];
+  related_essays: string[];
+}
 
-// Load questions and golden answers
-const questionsPath = path.join(__dirname, 'data', 'questions.json');
-const answersPath = path.join(__dirname, 'data', 'golden_answers.json');
+// Type for a golden answer from golden_answers.json
+interface GoldenAnswer {
+  id: number;
+  answer: string;
+  key_points: string[];
+}
 
-const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf-8'));
-const goldenAnswers = JSON.parse(fs.readFileSync(answersPath, 'utf-8'));
+// Type for an essay
+interface Essay {
+  title: string;
+  content: string;
+}
 
-// Create a mapping of question IDs to golden answers for easier lookup
-const answerMap = goldenAnswers.reduce((map, item) => {
+// Type for a system response
+interface SystemResponse {
+  answer: string;
+  retrievedEssays: string[];
+  error?: string;
+}
+
+// Type for an evaluation result
+interface EvaluationResult {
+  question: string;
+  systemAnswer: string;
+  goldenAnswer: string;
+  keyPoints: string[];
+  retrievedEssays: string[];
+  metrics: EvalMetrics;
+}
+
+// Load questions from JSON file
+const questions: Question[] = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'data', 'questions.json'), 'utf-8')
+);
+
+// Load golden answers from JSON file
+const goldenAnswers: GoldenAnswer[] = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'data', 'golden_answers.json'), 'utf-8')
+);
+
+// Create a map of question ID to golden answer for easy lookup
+const answerMap = goldenAnswers.reduce((map: Record<number, GoldenAnswer>, item: GoldenAnswer) => {
   map[item.id] = item;
   return map;
 }, {});
 
-// Config
-const BATCH_SIZE = 5; // Number of questions to evaluate in parallel
-const API_ENDPOINT = 'http://localhost:3000/api';
-const OUTPUT_DIR = path.join(__dirname, 'results');
-
-// Ensure output directory exists
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-}
-
-/**
- * Get system response for a given question
- */
-async function getSystemResponse(question: string): Promise<any> {
+// Get a system response for a question
+async function getSystemResponse(question: Question): Promise<SystemResponse> {
   try {
-    // Step 1: Search for relevant essays
-    const searchResponse = await fetch(`${API_ENDPOINT}/search`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: question }),
-    });
+    // Retrieve relevant essays
+    const retrievedEssays = await getEssaysForQuestion(question.question);
+    const essayTitles = retrievedEssays.map((essay: Essay) => essay.title);
     
-    if (!searchResponse.ok) {
-      throw new Error(`Search API error: ${searchResponse.statusText}`);
-    }
-    
-    const { essays } = await searchResponse.json();
-    
-    if (!essays || essays.length === 0) {
-      return { 
-        status: 'no_essays',
-        message: 'No relevant essays found'
-      };
-    }
-    
-    // Step 2: Generate summary using the essays
-    const summaryResponse = await fetch(`${API_ENDPOINT}/summarize`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ essays, query: question }),
-    });
-    
-    if (!summaryResponse.ok) {
-      throw new Error(`Summary API error: ${summaryResponse.statusText}`);
-    }
-    
-    const { summary, references } = await summaryResponse.json();
+    // Generate answer
+    const answer = await askQuestion(question.question);
     
     return {
-      status: 'success',
-      essays: essays.map(e => ({ title: e.title, url: e.url })).slice(0, 5),
-      summary,
-      references
+      answer,
+      retrievedEssays: essayTitles
     };
-  } catch (error) {
-    console.error(`Error getting response for question: ${question}`, error);
+  } catch (error: unknown) {
+    console.error(`Error processing question ${question.id}:`, error);
     return {
-      status: 'error',
-      message: error.message
+      answer: "",
+      retrievedEssays: [],
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }
 
-/**
- * Evaluate a batch of questions
- */
-async function evaluateBatch(batch, evaluator) {
-  const results = [];
+// Evaluate a batch of questions
+async function evaluateBatch(batch: Question[], evaluator: Evaluator): Promise<EvaluationResult[]> {
+  const results: EvaluationResult[] = [];
   
-  for (const item of batch) {
-    const { id, question } = item;
-    const goldenAnswer = answerMap[id];
+  for (const question of batch) {
+    console.log(`Processing question ${question.id}: ${question.question}`);
     
-    if (!goldenAnswer) {
-      console.warn(`No golden answer found for question ID ${id}`);
+    // Skip if no golden answer exists
+    if (!answerMap[question.id]) {
+      console.warn(`No golden answer found for question ${question.id}, skipping`);
       continue;
     }
     
-    console.log(`Evaluating question ${id}: "${question.substring(0, 50)}..."`);
-    
+    // Get the system's response
     const systemResponse = await getSystemResponse(question);
     
-    if (systemResponse.status !== 'success') {
-      console.warn(`Failed to get valid response for question ${id}: ${systemResponse.message}`);
-      results.push({
-        id,
-        question,
-        status: 'failed',
-        message: systemResponse.message,
-        scores: {
-          relevance: 0,
-          accuracy: 0,
-          completeness: 0,
-          citation: 0,
-          overall: 0
-        }
-      });
+    // Skip if there was an error
+    if (systemResponse.error) {
+      console.error(`Error with question ${question.id}: ${systemResponse.error}`);
       continue;
     }
     
-    // Evaluate the response
-    const evaluationResult = await evaluator.evaluate({
-      question,
-      systemAnswer: systemResponse.summary,
+    const goldenAnswer = answerMap[question.id];
+    
+    // Prepare evaluation input
+    const evalInput: EvalInput = {
+      question: question.question,
+      systemAnswer: systemResponse.answer,
       goldenAnswer: goldenAnswer.answer,
       keyPoints: goldenAnswer.key_points,
-      retrievedEssays: systemResponse.essays.map(e => e.title)
+      retrievedEssays: systemResponse.retrievedEssays,
+    };
+    
+    // Evaluate the response
+    console.log(`Evaluating response for question ${question.id}`);
+    const metrics = await evaluator.evaluate(evalInput);
+    
+    // Store the results
+    results.push({
+      question: question.question,
+      systemAnswer: systemResponse.answer,
+      goldenAnswer: goldenAnswer.answer,
+      keyPoints: goldenAnswer.key_points,
+      retrievedEssays: systemResponse.retrievedEssays,
+      metrics,
     });
     
-    results.push({
-      id,
-      question,
-      status: 'success',
-      systemResponse: {
-        essays: systemResponse.essays,
-        summary: systemResponse.summary,
-        references: systemResponse.references
-      },
-      goldenAnswer: goldenAnswer.answer,
-      keyPoints: goldenAnswer.key_points,
-      scores: evaluationResult
-    });
+    console.log(`Finished evaluating question ${question.id}`);
+    console.log("Scores:", metrics);
+    console.log("-----------------------------------");
   }
   
   return results;
 }
 
-/**
- * Process questions in batches
- */
-async function runEvaluation(useHumanEvaluator = false) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  // Choose evaluator based on argument
-  const evaluator = useHumanEvaluator ? new HumanEvaluator() : new GPT4Evaluator();
-  const allResults = [];
-  
-  // Process questions in batches
-  for (let i = 0; i < questions.length; i += BATCH_SIZE) {
-    const batch = questions.slice(i, i + BATCH_SIZE);
-    const batchResults = await evaluateBatch(batch, evaluator);
-    allResults.push(...batchResults);
-    
-    // Write interim results
-    fs.writeFileSync(
-      path.join(OUTPUT_DIR, `interim_results_${timestamp}.json`),
-      JSON.stringify(allResults, null, 2)
-    );
-    
-    console.log(`Completed batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(questions.length / BATCH_SIZE)}`);
-  }
-  
-  // Close human evaluator if used
-  if (useHumanEvaluator) {
-    (evaluator as HumanEvaluator).close();
-  }
-  
-  // Calculate aggregate metrics
-  const validResults = allResults.filter(result => result.status === 'success');
-  const metrics = {
-    total: questions.length,
-    successful: validResults.length,
-    failed: allResults.length - validResults.length,
-    averageScores: {
-      relevance: averageScore(validResults, 'relevance'),
-      accuracy: averageScore(validResults, 'accuracy'),
-      completeness: averageScore(validResults, 'completeness'),
-      citation: averageScore(validResults, 'citation'),
-      overall: averageScore(validResults, 'overall')
-    }
+// Calculate average score across all metrics
+function averageScore(results: EvaluationResult[]): EvalMetrics {
+  const initialMetrics: EvalMetrics = {
+    relevance: 0,
+    accuracy: 0,
+    completeness: 0,
+    citation: 0,
+    overall: 0
   };
   
-  // Write final results
-  const finalResults = {
-    timestamp,
-    metrics,
-    results: allResults
+  const sum = results.reduce((acc: EvalMetrics, result: EvaluationResult) => {
+    acc.relevance += result.metrics.relevance;
+    acc.accuracy += result.metrics.accuracy;
+    acc.completeness += result.metrics.completeness;
+    acc.citation += result.metrics.citation;
+    acc.overall += result.metrics.overall;
+    return acc;
+  }, initialMetrics);
+  
+  const count = results.length;
+  return {
+    relevance: sum.relevance / count,
+    accuracy: sum.accuracy / count,
+    completeness: sum.completeness / count,
+    citation: sum.citation / count,
+    overall: sum.overall / count
   };
+}
+
+// Main function to run the evaluation
+async function main() {
+  // Use command-line argument for number of questions or default to 5
+  const numQuestions = process.argv[2] ? parseInt(process.argv[2], 10) : 5;
+  const sampleQuestions = questions.slice(0, numQuestions);
+  
+  console.log(`Running evaluation on ${sampleQuestions.length} questions`);
+  
+  // Initialize evaluator
+  const evaluator = new GPT4Evaluator();
+  
+  // Run evaluation
+  const results = await evaluateBatch(sampleQuestions, evaluator);
+  
+  // Calculate and display overall scores
+  const averages = averageScore(results);
+  console.log("\nEVALUATION SUMMARY");
+  console.log("------------------");
+  console.log(`Questions evaluated: ${results.length}`);
+  console.log(`Average Relevance: ${(averages.relevance * 10).toFixed(2)}/10`);
+  console.log(`Average Accuracy: ${(averages.accuracy * 10).toFixed(2)}/10`);
+  console.log(`Average Completeness: ${(averages.completeness * 10).toFixed(2)}/10`);
+  console.log(`Average Citation Quality: ${(averages.citation * 10).toFixed(2)}/10`);
+  console.log(`Average Overall Quality: ${(averages.overall * 10).toFixed(2)}/10`);
+  
+  // Save results to file
+  const timestamp = new Date().toISOString().replace(/:/g, '-');
+  const resultsDir = path.join(__dirname, 'results');
+  
+  if (!fs.existsSync(resultsDir)) {
+    fs.mkdirSync(resultsDir, { recursive: true });
+  }
   
   fs.writeFileSync(
-    path.join(OUTPUT_DIR, `final_results_${timestamp}.json`),
-    JSON.stringify(finalResults, null, 2)
+    path.join(resultsDir, `eval_results_${timestamp}.json`),
+    JSON.stringify({ results, averages }, null, 2)
   );
   
-  console.log("\n===== Evaluation Complete =====");
-  console.log(`Total questions: ${metrics.total}`);
-  console.log(`Successful evaluations: ${metrics.successful}`);
-  console.log(`Failed evaluations: ${metrics.failed}`);
-  console.log("\nAverage Scores:");
-  console.log(`Relevance: ${metrics.averageScores.relevance.toFixed(2)}`);
-  console.log(`Accuracy: ${metrics.averageScores.accuracy.toFixed(2)}`);
-  console.log(`Completeness: ${metrics.averageScores.completeness.toFixed(2)}`);
-  console.log(`Citation Quality: ${metrics.averageScores.citation.toFixed(2)}`);
-  console.log(`Overall: ${metrics.averageScores.overall.toFixed(2)}`);
-  console.log(`\nResults saved to: ${path.join(OUTPUT_DIR, `final_results_${timestamp}.json`)}`);
+  console.log(`\nResults saved to eval_results_${timestamp}.json`);
 }
 
-/**
- * Helper function to calculate average score
- */
-function averageScore(results, metric) {
-  const sum = results.reduce((acc, result) => acc + (result.scores[metric] || 0), 0);
-  return sum / results.length;
-}
-
-// Run the evaluation when script is executed directly
+// Run the evaluation if this file is executed directly
 if (require.main === module) {
-  // Check if human evaluation is requested
-  const useHumanEvaluator = process.argv.includes('--human');
-  
-  console.log(`Starting evaluation with ${useHumanEvaluator ? 'human' : 'GPT-4'} evaluator...`);
-  
-  runEvaluation(useHumanEvaluator).catch(error => {
-    console.error("Evaluation failed:", error);
+  main().catch(err => {
+    console.error("Error in evaluation:", err);
     process.exit(1);
   });
-}
-
-export { runEvaluation }; 
+} 

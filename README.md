@@ -84,31 +84,41 @@ python upload_to_supabase.py
 
 ## Evaluation Framework
 
-The project includes a comprehensive evaluation toolkit to benchmark the quality of the RAG system's responses:
+The project includes a comprehensive evaluation toolkit to assess the performance of the RAG system. This toolkit enables quantitative measurement of response quality, retrieval accuracy, and overall system performance.
 
-### Features
+### Key Features
 
-- Predefined set of questions with expert-written "golden" answers
-- Automated evaluation using GPT-4
-- Interactive human evaluation option
-- Detailed metrics including relevance, accuracy, completeness, and citation quality
-- Comprehensive reporting and statistics
+- **Automated Evaluation**: The system uses GPT-4 to evaluate responses against golden answers
+- **Multiple Metrics**: Evaluates responses on relevance, accuracy, completeness, citation quality, and overall quality
+- **Test Mode**: Supports mock implementations for development and testing without making API calls
+- **Detailed Reports**: Generates comprehensive evaluation reports in JSON format
 
 ### Running Evaluations
 
+To run evaluations:
+
 ```bash
-# Install evaluation dependencies
-cd eval
-npm install
+# Evaluate with a specific number of questions (e.g., 5)
+npx ts-node eval/run_evaluation.ts 5
 
-# Run automated evaluation with GPT-4
-npm run eval:auto
+# Run in test mode (no API calls)
+NODE_ENV=test npx ts-node eval/run_evaluation.ts 5
 
-# Run interactive human evaluation
-npm run human
+# Run a full evaluation
+npx ts-node eval/run_evaluation.ts
 ```
 
-See the [evaluation README](./eval/README.md) for more details.
+Evaluation results are stored in `eval/results/` as timestamped JSON files.
+
+### Evaluation Metrics
+
+- **Relevance (1-10)**: How relevant the retrieved essays are to the question
+- **Accuracy (1-10)**: Factual correctness compared to golden answers
+- **Completeness (1-10)**: How thoroughly the answer addresses key points
+- **Citation Quality (1-10)**: Accuracy and quality of citations to source material
+- **Overall Quality (1-10)**: General assessment of answer quality
+
+The evaluation framework helps identify areas for improvement in the RAG system and provides a quantitative way to measure progress over time.
 
 ## Database Setup
 
