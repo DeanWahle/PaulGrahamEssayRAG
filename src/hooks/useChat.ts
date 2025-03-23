@@ -50,8 +50,8 @@ export function useChat() {
 
       // Step 2: Generate summary if essays found
       if (essays && essays.length > 0) {
-        // Format essay links for display in a list
-        const essayLinksFormatted = essays.slice(0, 3).map((essay: Essay) => 
+        // Format essay links for display in a list - show top 5 essays to match references
+        const essayLinksFormatted = essays.slice(0, 5).map((essay: Essay) => 
           `<li><a href="${essay.url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">${essay.title}</a></li>`
         ).join('');
 

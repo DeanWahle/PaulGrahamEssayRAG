@@ -71,3 +71,10 @@ main {
 .response-container {
   max-width: 100%;
 }
+
+/* Message sizing utilities */
+.max-w-2\/3 {
+  max-width: 66.666667%;
+  width: auto;
+  min-width: 150px; /* Ensure a minimum width for very short messages */
+}

@@ -28,9 +28,16 @@ export default function Home() {
                         ? 'bg-blue-500/10 ml-auto' 
                         : 'bg-gray-500/10 mr-auto'
                     } ${
-                      message.role === 'user' 
-                        ? 'w-2/3 ml-auto text-right' 
-                        : 'w-2/3 mr-auto text-left'
+                      message.role === 'user'
+                        ? 'ml-auto text-right' 
+                        : 'mr-auto text-left'
+                    } ${
+                      // For assistant messages with rich content (contains "response-container"), 
+                      // or long user messages, use the 2/3 width
+                      (message.role === 'assistant' && message.content.includes('response-container')) || 
+                      (message.role === 'user' && message.content.length > 100)
+                        ? 'w-2/3' 
+                        : 'max-w-2/3' // Otherwise let it be as wide as content (with max-width)
                     }`}
                   >
                     <div 
@@ -43,7 +50,7 @@ export default function Home() {
             )}
             {isLoading && (
               <div className="flex w-full">
-                <div className="p-4 rounded-lg bg-gray-500/10 w-2/3 mr-auto">
+                <div className="p-4 rounded-lg bg-gray-500/10 mr-auto">
                   <div className="flex space-x-2">
                     <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
