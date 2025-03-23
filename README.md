@@ -17,28 +17,6 @@ A Next.js application that uses Retrieval Augmented Generation (RAG) to answer q
 - **AI**: OpenAI for embeddings (text-embedding-3-small) and text generation (GPT-4 Turbo)
 - **Markdown**: Marked.js for rendering markdown in responses
 
-## Data Preparation
-
-The project includes scripts to collect and prepare Paul Graham's essays:
-
-1. **Scraping**: `scripts/scrape_essays.py` scrapes Paul Graham's essays from his website
-2. **Embedding**: The script also generates embeddings for each essay using OpenAI
-3. **Database Upload**: `scripts/upload_to_supabase.py` uploads the essays with their embeddings to Supabase
-
-To run the data preparation scripts:
-
-```bash
-# Create a virtual environment for the scripts
-cd scripts
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Run the scripts
-python scrape_essays.py
-python upload_to_supabase.py
-```
-
 ## Getting Started
 
 ### Prerequisites
@@ -46,6 +24,7 @@ python upload_to_supabase.py
 - Node.js 18+ and npm
 - OpenAI API key
 - Supabase account with a project that has the pgvector extension enabled
+- Docker and Docker Compose (optional, for local development)
 
 ### Environment Setup
 
@@ -80,7 +59,31 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Data Preparation
+
+The project includes scripts to collect and prepare Paul Graham's essays:
+
+1. **Scraping**: `scripts/scrape_essays.py` scrapes Paul Graham's essays from his website
+2. **Embedding**: The script also generates embeddings for each essay using OpenAI
+3. **Database Upload**: `scripts/upload_to_supabase.py` uploads the essays with their embeddings to Supabase
+
+To run the data preparation scripts:
+
+```bash
+# Create a virtual environment for the scripts
+cd scripts
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Run the scripts
+python scrape_essays.py
+python upload_to_supabase.py
+```
+
 ## Database Setup
+
+### Using Supabase Cloud
 
 The application requires a Supabase database with the following:
 
@@ -119,6 +122,44 @@ as $$
   order by similarity desc
   limit match_count;
 $$;
+```
+
+### Using Docker for Local Development
+
+This project includes Docker configuration for local development with Supabase PostgreSQL:
+
+1. Start the Docker container:
+
+```bash
+docker-compose up -d
+```
+
+2. The container will automatically:
+
+   - Set up PostgreSQL with the pgvector extension
+   - Create the essays table with the correct schema
+   - Set up the vector similarity search function
+
+3. To load data into the local database, use the scripts:
+
+```bash
+# Make sure you're in the scripts directory with the virtual environment activated
+python upload_to_supabase.py
+```
+
+4. Update your `.env.local` to use the local database:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=http://localhost:5432
+NEXT_PUBLIC_SUPABASE_ANON_KEY=postgres
+OPENAI_API_KEY=your_openai_api_key
+```
+
+5. To reset the database and start fresh:
+
+```bash
+# From the project root
+./scripts/restart_and_load.sh
 ```
 
 ## Deployment
