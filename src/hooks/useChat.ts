@@ -50,10 +50,10 @@ export function useChat() {
 
       // Step 2: Generate summary if essays found
       if (essays && essays.length > 0) {
-        // Format essay links for display
-        const essayLinks = essays.map((essay: Essay) => 
-          `<a href="${essay.url}" target="_blank" rel="noopener noreferrer">${essay.title}</a> (similarity: ${essay.similarity.toFixed(2)})`
-        ).join('<br>');
+        // Format essay links for display in a list
+        const essayLinksFormatted = essays.slice(0, 3).map((essay: Essay) => 
+          `<li><a href="${essay.url}" target="_blank" rel="noopener noreferrer">${essay.title}</a></li>`
+        ).join('');
 
         // Generate AI summary
         const summaryResponse = await fetch('/api/summarize', {
@@ -66,10 +66,16 @@ export function useChat() {
           throw new Error('Summary request failed');
         }
 
-        const { summary } = await summaryResponse.json();
+        const { summary, references } = await summaryResponse.json();
 
-        // Format the complete response with just the parsed summary
-        const formattedResponse = `${marked.parse(summary)}`;
+        // Format the complete response with both essay links and summary
+        const formattedResponse = `
+          <h3>Relevant essay links:</h3>
+          <ol>${essayLinksFormatted}</ol>
+          <h3>AI-generated synthesis:</h3>
+          <div class="synthesis">${marked.parse(summary)}</div>
+          ${references ? `<h4>References:</h4>${marked.parse(references)}` : ''}
+        `;
 
         // Add assistant message to chat
         setMessages((prev) => [
