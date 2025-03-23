@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     // Format the essay content for the prompt
-    const essayContext = essays.map((essay, index) => 
+    const essayContext = essays.map((essay: any, index: any) => 
       `Essay ${index + 1}: "${essay.title}" (${essay.url})\n${essay.content.substring(0, 800)}...\n\n`
     ).join('');
 
