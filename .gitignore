@@ -38,6 +38,12 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# data files - large embedding files should not be committed
+data/
+/scripts/venv/
+/scripts/__pycache__/
+/scripts/*.json
+
 # vercel
 .vercel
 

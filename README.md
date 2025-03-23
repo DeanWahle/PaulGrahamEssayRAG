@@ -17,6 +17,28 @@ A Next.js application that uses Retrieval Augmented Generation (RAG) to answer q
 - **AI**: OpenAI for embeddings (text-embedding-3-small) and text generation (GPT-4 Turbo)
 - **Markdown**: Marked.js for rendering markdown in responses
 
+## Data Preparation
+
+The project includes scripts to collect and prepare Paul Graham's essays:
+
+1. **Scraping**: `scripts/scrape_essays.py` scrapes Paul Graham's essays from his website
+2. **Embedding**: The script also generates embeddings for each essay using OpenAI
+3. **Database Upload**: `scripts/upload_to_supabase.py` uploads the essays with their embeddings to Supabase
+
+To run the data preparation scripts:
+
+```bash
+# Create a virtual environment for the scripts
+cd scripts
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Run the scripts
+python scrape_essays.py
+python upload_to_supabase.py
+```
+
 ## Getting Started
 
 ### Prerequisites
