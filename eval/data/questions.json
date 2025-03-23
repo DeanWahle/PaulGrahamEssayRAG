@@ -1,0 +1,142 @@
+[
+    {
+        "id": 1,
+        "question": "What qualities does Paul Graham look for in founders?",
+        "related_essays": [
+            "What We Look for in Founders",
+            "Why It's Safe for Founders to Be Nice",
+            "The 18 Mistakes That Kill Startups"
+        ],
+        "tags": [
+            "founders",
+            "startups",
+            "qualities"
+        ]
+    },
+    {
+        "id": 2,
+        "question": "How important is determination for startup founders according to Paul Graham?",
+        "related_essays": [
+            "What We Look for in Founders",
+            "How to Make Wealth",
+            "The Hardest Lessons for Startups to Learn"
+        ],
+        "tags": [
+            "determination",
+            "founders",
+            "startups"
+        ]
+    },
+    {
+        "id": 3,
+        "question": "What does Paul Graham say about startups and competition?",
+        "related_essays": [
+            "How to Start a Startup",
+            "Do Things that Don't Scale",
+            "Startup = Growth"
+        ],
+        "tags": [
+            "competition",
+            "startups",
+            "growth"
+        ]
+    },
+    {
+        "id": 4,
+        "question": "How does Paul Graham recommend approaching startup ideas?",
+        "related_essays": [
+            "How to Get Startup Ideas",
+            "Schlep Blindness",
+            "Before the Startup"
+        ],
+        "tags": [
+            "ideas",
+            "startups",
+            "innovation"
+        ]
+    },
+    {
+        "id": 5,
+        "question": "What does Paul Graham say about wealth creation?",
+        "related_essays": [
+            "How to Make Wealth",
+            "Mind the Gap",
+            "How to Start a Startup"
+        ],
+        "tags": [
+            "wealth",
+            "economics",
+            "growth"
+        ]
+    },
+    {
+        "id": 6,
+        "question": "How should founders handle difficult decisions according to Paul Graham?",
+        "related_essays": [
+            "What We Look for in Founders",
+            "How to Make Wealth",
+            "How Not to Die"
+        ],
+        "tags": [
+            "decision-making",
+            "founders",
+            "resilience"
+        ]
+    },
+    {
+        "id": 7,
+        "question": "What role does Paul Graham think investors should play with startups?",
+        "related_essays": [
+            "How to Be an Angel Investor",
+            "How to Raise Money",
+            "Investor Herd Dynamics"
+        ],
+        "tags": [
+            "investors",
+            "funding",
+            "VC"
+        ]
+    },
+    {
+        "id": 8,
+        "question": "How does Paul Graham recommend dealing with startup growth?",
+        "related_essays": [
+            "Startup = Growth",
+            "Do Things that Don't Scale",
+            "Growth"
+        ],
+        "tags": [
+            "growth",
+            "scaling",
+            "startups"
+        ]
+    },
+    {
+        "id": 9,
+        "question": "What are the key traits of successful hackers according to Paul Graham?",
+        "related_essays": [
+            "Great Hackers",
+            "Hackers and Painters",
+            "The Word Hacker"
+        ],
+        "tags": [
+            "hackers",
+            "programming",
+            "talent"
+        ]
+    },
+    {
+        "id": 10,
+        "question": "How does Paul Graham view the relationship between startups and big companies?",
+        "related_essays": [
+            "How to Start a Startup",
+            "Why Startups Condense in America",
+            "How to Make Wealth"
+        ],
+        "tags": [
+            "competition",
+            "big companies",
+            "innovation"
+        ]
+    }
+]
